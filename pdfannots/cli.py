@@ -44,8 +44,9 @@ def parse_args() -> typ.Tuple[argparse.Namespace, LAParams]:
                         "columns per page. If unset, PDFMiner's layout detection logic is used.")
     g.add_argument("--keep-hyphens", dest="remove_hyphens", default=True, action="store_false",
                    help="When capturing text across a line break, don't attempt to remove hyphens.")
-    g.add_argument("-c", "--chapter", default=1, type=int, metavar="N", 
-    help="Chapter number to use for the first chapter in the output (default: 1).")
+
+    g.add_argument("-t", "--title", default="Title", type=str, metavar="TITLE",
+    help="Title to use for the first chapter in the output (default: Title).")
 
     g = p.add_argument_group('Options controlling markdown output')
     g.add_argument("-s", "--sections", metavar="SEC", nargs="*",
@@ -61,6 +62,13 @@ def parse_args() -> typ.Tuple[argparse.Namespace, LAParams]:
                    help="Print the name of each file with annotations.")
     g.add_argument("-w", "--wrap", dest="wrap_column", metavar="COLS", type=int,
                    help="Wrap text at this many output columns.")
+    g.add_argument("--notion-token", dest="notion_token", metavar="TOKEN", type=str, default=None,
+                    help="Notion token to use for uploading annotations.")
+    g.add_argument("--notion-database", dest="notion_database", metavar="DATABASE", type=str, default=None,
+                    help="Notion database to use for uploading annotations.")
+    
+
+
 
     g = p.add_argument_group(
         "Advanced options affecting PDFMiner text layout analysis")
@@ -127,7 +135,9 @@ def main() -> None:
     printer = JsonPrinter(remove_hyphens=args.remove_hyphens)
 
     file = args.input[0] 
-    chapter = args.chapter
+    notion_token = args.notion_token
+    notion_database = args.notion_database
+    title = args.title
 
     json_data = ""
 
@@ -140,7 +150,9 @@ def main() -> None:
         json_data += line
 
     json_data = json.loads(json_data)
-    json_data.append(chapter)
+    json_data.append(
+        "notion_token:{}, notion_database:{}, title:{}".format(notion_token, notion_database, title)
+    )
 
 
     return json_data

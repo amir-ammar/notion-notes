@@ -2,14 +2,8 @@
 
 import pdfannots.cli
 import requests
-from dotenv import load_dotenv
-from pprint import pprint
 import json
 import os
-
-
-load_dotenv()
-
 
 class NotionClient: 
 
@@ -41,10 +35,10 @@ class NotionClient:
         return list(pages)
         
 
-    def page_already_exists(self, chapter):
-        chapter = "Chapter {} notes".format(chapter)
+    def page_already_exists(self, title):
+        
         pages = self.get_pages()
-        return chapter in map(lambda page: page['title'], pages)
+        return title in map(lambda page: page['title'], pages)
 
         
 
@@ -55,7 +49,7 @@ class NotionClient:
         )
         return response.json()
 
-    def create_page(self, chapter):
+    def create_page(self, title):
         
         page_data = {
             "parent": {
@@ -66,7 +60,7 @@ class NotionClient:
                     "title": [
                         {
                             "text": {
-                                "content": "Chapter {} notes".format(chapter)
+                                "content": title
                             }
                         }
                     ]
@@ -131,14 +125,12 @@ class NotionClient:
         return response.json()
     
     
-    def process_notes(self, chapter, notes):
+    def process_notes(self, title, notes):
 
-        if not self.page_already_exists(chapter=chapter): 
-            self.create_page(chapter=chapter)
+        if not self.page_already_exists(title=title): 
+            self.create_page(title=title)
 
-        page_id = list(filter(lambda page: page['title'] == "Chapter {} notes".format(chapter), self.get_pages()))[0]['id']
-        
-        self.add_page_block("heading_1", page_id, notes[0]['author'] + "'s notes")
+        page_id = list(filter(lambda page: page['title'] == title, self.get_pages()))[0]['id']
         
         for note in notes:
 
@@ -154,7 +146,14 @@ class NotionClient:
 if __name__ == '__main__':
 
     notes = pdfannots.cli.main()
-    notion_client = NotionClient(os.getenv('NOTION_TOKEN'), os.getenv('DATABASE_ID'))
-    chapter = notes[len(notes) - 1]
+    
+    meta_data = notes[len(notes) - 1].split(",")
+    
+    notion_token = meta_data[0].split(":")[1]
+    database_id = meta_data[1].split(":")[1]
+    title = meta_data[2].split(":")[1]
+    
+    notion_client = NotionClient(token=notion_token, database_id=database_id)
     notes = notes[:len(notes) - 1]
-    notion_client.process_notes(chapter, notes)
+    notion_client.process_notes(title, notes)
+
