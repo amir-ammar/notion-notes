@@ -2,3 +2,4 @@
 # Use as: pip3 install -r requirements.txt
 
 pdfminer.six == 20220319
+cryptography>=46.0.5 # not directly required, pinned by Snyk to avoid a vulnerability
